@@ -3,26 +3,41 @@
 // angular.module is a global place for creating, registering and retrieving Angular modules
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
-angular.module('starter', ['ionic', 'firebase'])
+angular.module('starter', ['ionic', 'firebase', 'ngCordova'])
 
 .factory('Items', ['$firebaseArray', function($firebaseArray) {
   var itemsRef = new Firebase('https://todo-ionic-app.firebaseio.com/items');
   return $firebaseArray(itemsRef);
 }])
 
-.controller('ListCtrl', function($scope, $ionicListDelegate, Items) {
+.controller('ListCtrl', function($scope, $ionicListDelegate, $cordovaDialogs, Items) {
+  //$scope.items = [];
   $scope.items = Items;
 
+  // $scope.addItem = function() {
+  //   var name = prompt('What do you need to buy?');
+  //   if (name) {
+  //     $scope.items.$add({'name': name}); //firebase function that adds the item to firebase
+  //     //$scope.items.push({'name': name});
+  //   }
+  // };
+
   $scope.addItem = function() {
-    var name = prompt('What do you need to buy?');
-    if (name) {
-      $scope.items.push({'name': name});
-    }
-  };
+    $cordovaDialogs.prompt('What do you need to buy?', 'Grocery Keeper', ['Cancel', 'Add'], '')
+      .then(function(result) {
+        if (result.buttonIndex == 2) {
+          $scope.items.$add({
+            'name': result.input1
+          });
+        }
+      });
+    };
 
   $scope.purchaseItem = function(item) {
-    $scope.item = item;
-    $scope.item['status'] = 'purchased';
+    var itemRef = new Firebase('https://todo-ionic-app.firebaseio.com/items/' + item.$id);
+    itemRef.child('status').set('purchased');
+    //$scope.item = item;
+    //$scope.item['status'] = 'purchased';
     $ionicListDelegate.closeOptionButtons(); //This needs to be injected into the controller
   };
 })
